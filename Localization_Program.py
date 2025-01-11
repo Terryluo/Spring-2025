@@ -23,7 +23,6 @@ def localize(colors, measurements, motions, sensor_right, p_move):
         p = move(p, motions[k], p_move)
         p = sense(p, colors, measurements[k], sensor_right)
     #show(p)
-    print(p)
     return p
 
 def sense(p, colors, measurement, sensor_right):
