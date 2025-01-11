@@ -4,17 +4,29 @@ colors = [['G', 'G', 'G'],
 measurements = ['R']
 motions = [[0, 0]]
 
-sensor_right = 0.8
+sensor_right = 1.0
 p_move = 1.0
-p = [[1.0 for col in range(len(colors[0]))] for row in range(len(colors))]
+
+
+
+
+
 
 def localize(colors, measurements, motions, sensor_right, p_move):
-    for i in range(len(motions)):
-        pos = move(p, motions[i])
-        pos = sense(p, colors, measurements[i])
-    return pos
+    if len(measurements) != len(motions):
+        raise ValueError("error in size of measurement/motion vector")
 
-def sense(p, colors, measurement):
+    pinit = 1.0 / (float(len(colors)) * float(len(colors[0])))
+    p = [[pinit for col in range(len(colors[0]))] for row in range(len(colors))]
+
+    for k in range(len(measurements)):
+        p = move(p, motions[k], p_move)
+        p = sense(p, colors, measurements[k], sensor_right)
+    #show(p)
+    print(p)
+    return p
+
+def sense(p, colors, measurement, sensor_right):
     """
     :param p: The posterior probability
     :param Z: The single measurement
@@ -35,7 +47,7 @@ def sense(p, colors, measurement):
 
 
 
-def move(p, motion):
+def move(p, motion, p_move):
     """
     :param p: the posterior probability before move
     :param U: steps that moves to the right
@@ -45,8 +57,15 @@ def move(p, motion):
     for i in range(len(p)):
         for j in range(len(p[i])):
             aux[i][j] = (p_move * p[(i - motion[0]) % len(p)][(j - motion[1]) % len(p[i])]
-                         + (1 - p_move) * p[(i - motion[0]) % len(p)][(j - motion[1]) % len(p[i])])
+                         + (1 - p_move) * p[i][j])
     return aux
 
+def show(p):
+    '''
+    :param p:
+    :return:
+    '''
+    rows = ['[' + ','.join(map(lambda x: '{0: .5f}'.format(x), r)) + ']' for r in p]
+    print('[' + ',\n '.join(rows) + ']')
 
-print(localize(colors, measurements, motions, sensor_right, p_move))
+localize(colors, measurements, motions, sensor_right, p_move)
