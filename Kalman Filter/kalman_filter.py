@@ -1,47 +1,37 @@
-measurements = [5., 6., 7., 9., 10.]
-motion = [1., 1., 2., 1., 1.]
-measurement_sig = 4. #sigma for measurement
-motion_sig = 2. # sigma for motion
-mu = 0. #initial mu
-sig = 0.000001 # initial sigma
+from matrix import *
 
-def kalman_filter(mu, sig):
-    for i in range(len(motion)):
-        [mu, sig] = update(mu, sig, measurements[i], measurement_sig)
-        print('Update: ', [mu, sig])
-        [mu, sig] = predict(mu, sig, motion[i], motion_sig)
-        print('Predict: ', [mu, sig])
-    return [mu, sig]
+measurements = [1, 2, 3]
+
+x = matrix([[0.], [0.]]) # initial state (Location and velocity) -> estimate
+P = matrix([[1000., 0.], [0., 1000.]]) # initial uncertainty -> uncertainty covariance
+u = matrix([[0.], [0.]]) # external motion (now we are ignoring it) -> motion vector
+F = matrix([[1., 1.],[0, 1.]]) # next state function -> state transition matrix
+H = matrix([[1., 0]]) # measurement function -> measurement function
+R = matrix([[1.]]) # measurement uncertainty -> measurement noise
+I = matrix([[1., 0], [0, 1.]]) # identity matrix
 
 
-def update(mean1, var1, mean2, var2):
-    '''
-    update new mean and new variance given the mean and variance of the prior belief and
-    the mean and variance of the measurement
-    :param var1: variance of the prior belief
-    :param mean2:
+def kalman_filter(x, P):
+    for i in range(len(measurements)):
+        # measurement update
+        Z = matrix([[measurements[i]]]) # 1
+        y = Z - (H * x) # 1.0
+        S = H * P * H.transpose() + R # 1001
+        K = P * H.transpose() * S.inverse() # Kalman gain
+        x = x + (K * y) # back to my next prediction -> x' = x + K * y
 
-    :param mean2:
-    :param var2:
-    :return:
-    '''
-    new_mean = (mean1 * var2 + mean2 * var1) / (var1 + var2)
-    new_var = 1 / (1 / var1 + 1 / var2)
-    return [new_mean, new_var]
+        P = (I - (K * H)) * P # my measurement update -> P' = (I - K * H) * P
 
-def predict(mean1, var1, mean2, var2):
-    '''
-    predict new mean and new variance given the mean and variance of the prior belief and
-    the mean and variance of the motion
-    :param mean1: mean of the prior belief
-    :param var1: variance of the prior belief
-    :param mean2: mean of the motion
-    :param var2: variance of the motion
-    :return:
-    '''
-    new_mean = mean1 + mean2
-    new_var = var1 + var2
-    return [new_mean, new_var]
+        # prediction
+        x = (F * x) + u # x' = Fx + u
+        P = F * P * F.transpose() # P' = F * P * F ^ T
 
-#[mu, sig] = kalman_filter(0, 1000.)
-[mu, sig] = kalman_filter(5, 0.000001)
+        print('x = ')
+        x.show()
+        print('P = ')
+        P.show()
+
+    return [x, P]
+
+
+print(kalman_filter(x, P))

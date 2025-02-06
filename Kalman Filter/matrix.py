@@ -24,7 +24,7 @@ class matrix:
         else:
             self.dimx = dimx
             self.dimy = dimy
-            self.value - [[0 for row in range(dimy)] for col in range(dimx)]
+            self.value = [[0 for row in range(dimy)] for col in range(dimx)]
 
     def identity(self, dim):
         '''
@@ -91,7 +91,7 @@ class matrix:
         else:
             # multiply if correct dimensions
             res = matrix([[]])
-            res.zero(self.dimx, self.dimy)
+            res.zero(self.dimx, other.dimy)
             for i in range(self.dimx):
                 for j in range(other.dimy):
                     for k in range(self.dimy):
@@ -101,7 +101,7 @@ class matrix:
     def transpose(self):
         # compute transpose
         res = matrix([[]])
-        res.zero(self.dimx, self.dimy)
+        res.zero(self.dimy, self.dimx)
         for i in range(self.dimx):
             for j in range(self.dimy):
                 res.value[j][i] = self.value[i][j]
@@ -123,13 +123,10 @@ class matrix:
                     raise ValueError("Matrix not positive-definite")
                 res.value[i][i] = sqrt(d)
             for j in range(i + 1, self.dimx):
-                S = sum([res.value[k][i] * res.value[k][j] for k in range(self.dimx)]) # may have mistake
+                S = sum([res.value[k][i] * res.value[k][j] for k in range(i)])
                 if abs(S) < ztol:
                     S = 0.0
-                try:
-                    res.value[i][j] = (self.value[i][j] - S) / res.value[i][i]
-                except:
-                    raise ValueError("Zero diagonal")
+                res.value[i][j] = (self.value[i][j] - S) / res.value[i][i]
         return res
 
     def CholeskyInverse(self):
@@ -140,10 +137,14 @@ class matrix:
         # Backward step of inverse
         for j in reversed(range(self.dimx)):
             tjj = self.value[j][j]
-            S = sum([self.value[j][k] * self.value[j][k] for k in range(j + 1, self.dimy)]) # may have mistake
-            res.value[i][j] = 1.0 / tjj ** 2 - S / tjj
+            res.value[j][j] = 1.0 / tjj ** 2
+            for k in range(j + 1, self.dimx):
+                res.value[j][j] -= self.value[j][k] * res.value[j][k] / tjj
             for i in reversed(range(j)):
-                res.value[j][i] = res.value[i][j] # missing calculation
+                res.value[i][j] = -sum(
+                    [self.value[i][k] * res.value[k][j] for k in range(i + 1, self.dimx)]
+                ) / self.value[i][i]
+                res.value[j][i] = res.value[i][j]  # Symmetric property
         return res
 
     def inverse(self):
@@ -153,5 +154,12 @@ class matrix:
 
     def __repr__(self):
         return repr(self.value)
+
+
+
+#a = matrix([[10.], [10.]])
+#F = matrix([[12., 8.], [6., 2.]])
+#b = F * a
+#b.show()
 
 
