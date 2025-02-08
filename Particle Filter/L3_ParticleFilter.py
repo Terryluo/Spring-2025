@@ -38,23 +38,40 @@ print("\n10. MOVING ROBOT")
 # Your program should print out the result of
 # your two sense measurements.
 
-myrobot = robot()
-# TODO: ADD CODE HERE
+myrobot10 = robot()
+# starts at 30.0, 50.0, heading North (pi/2)
+myrobot10.set(30.0, 50.0, pi / 2)
+print(myrobot10)
+# turns clockwise pi/2, moves 15 meters
+myrobot10 = myrobot10.move(- pi / 2, 15)
+print(myrobot10)
+# senses
+print(myrobot10.sense())
+# turns clockwise by pi / 2, moves 10 meters
+myrobot10 = myrobot10.move(- pi / 2, 10)
+print(myrobot10)
+print(myrobot10.sense())
 
 # --------------------------------------------------------------------
 # 11. ADD NOISE
 print("\n11. ADD NOISE")
 # Now add noise to your robot as follows:
 # forward_noise = 5.0, turn_noise = 0.1, sense_noise = 5.0.
+myrobot11 = robot()
+myrobot11.set_noise(5.0, 0.1, 5.0)
 #
 # Once again, your robot starts at 30, 50,
-# heading north (pi/2), then turns clockwise
-# by pi/2, moves 15 meters, senses,
-# then turns clockwise by pi/2 again, moves
-# 10 m, then senses again.
-
-myrobot = robot()
-# TODO: ADD CODE HERE
+# heading north (pi/2),
+myrobot11.set(30.0, 50.0, pi / 2)
+print(myrobot11)
+# then turns clockwise by pi/2, moves 15 meters, senses,
+myrobot11 = myrobot11.move(- pi / 2, 15)
+print(myrobot11)
+print(myrobot11.sense())
+# then turns clockwise by pi/2 again, moves 10 m, then senses again.
+myrobot11 = myrobot11.move(- pi / 2, 10)
+print(myrobot11)
+print(myrobot11.sense())
 
 
 # --------------------------------------------------------------------
@@ -70,8 +87,15 @@ print("\n13. CREATING PARTICLES")
 
 N = 1000
 p = []
-# TODO: ADD CODE HERE
-print(len(p))
+for i in range(N):
+    myrobot13 = robot()
+    myrobot13.set_noise(5.0, 0.1, 5.0)
+    myrobot13.set(30.0, 50.0, pi / 2)
+    myrobot13 = myrobot13.move(- pi / 2, 15)
+    myrobot13 = myrobot13.move(- pi / 2, 10)
+    p.append(myrobot13)
+#print(len(p))
+#print(p)
 
 # --------------------------------------------------------------------
 # 14. ROBOT PARTICLES
@@ -81,7 +105,16 @@ print("\n14. ROBOT PARTICLES")
 # Each particle should turn by 0.1
 # and then move by 5.
 
-# TODO: ADD CODE HERE
+N = 1000
+p1 = []
+for i in range(N):
+    x = robot()
+    p1.append(x)
+
+p2 = []
+for i in range(N):
+    p2.append(p1[i].move(0.1, 5.0))
+#print(p2)
 
 # --------------------------------------------------------------------
 # 15. IMPORTANCE WEIGHT
@@ -94,16 +127,35 @@ myrobot = robot()
 myrobot = myrobot.move(0.1, 5.0)
 Z = myrobot.sense()
 
-N = 1000
-p = []
-
 # Copy and paste your solution code from the previous exercises (#13 and #14)
 # Note that there will need to be a small modification for setting noise to the
 # previous code as stated in the video
 
+p15_1 = []
+for i in range(N):
+    x = robot()
+    x.set_noise(0.05, 0.05, 5.0)
+    p15_1.append(x)
+
+p15_2 = []
+for i in range(N):
+    p15_2.append(p15_1[i].move(0.1, 5.0))
+
 w = []
-# TODO: ADD CODE HERE
+'''
+  Here is some note:
+  1. calculate the current measurement and the sense() Z
+  2. generate 1000 samples(resample) that gives the probability that would close to Z
+  3. maintaining the high probability particles, and letting the low probability particles die.
+'''
+probability_sum = 0.0
+for i in range(N):
+    w.append(p15_2[i].measurement_prob(Z))
+    probability_sum += w[i]
+
 print(w)
+print(probability_sum) # the sum here is not equals to 1
+
 
 # --------------------------------------------------------------------
 # 20. NEW PARTICLE
