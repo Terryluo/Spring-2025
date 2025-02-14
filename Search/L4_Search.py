@@ -52,8 +52,48 @@ delta_name = ['^', '<', 'v', '>']
 def search(grid, init, goal, cost):
     path = None
     # TODO: ADD CODE HERE
+    record = [[None for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            record[i][j] = False
+    g_value = 0
+    queue = [[g_value, init[0], init[1]]]
+    record[init[0]][init[1]] = True
+    print('initial open list')
+    print(queue[0])
+    while len(queue) != 0:
+        # Pop the node with the lowest cost (like a priority queue)
+        queue.sort(key=lambda x: x[0])  # Ensure smallest g_value first
+        queue.reverse()
+        node = queue.pop(0) # pop is getting the end one
+        g_value = node[0]
+        x = node[1]
+        y = node[2]
 
-    return path
+        # Check if goal is reached
+        if x == goal[0] and y == goal[1]:
+            print(node)
+            print('##### Search successful')
+            return node
+
+        print('----')
+        print('take list item:')
+        print(node)
+        print('new open list:')
+
+        # Explore neighbors
+        for i in range(len(delta)):
+            new_x = x + delta[i][0]
+            new_y = y + delta[i][1]
+            if 0 <= new_x < len(grid) and 0 <= new_y < len(grid[0]) and grid[new_x][new_y] != 1 and not record[new_x][
+                new_y]:
+                new_node = [g_value + cost, new_x, new_y]  # Add movement cost
+                queue.append(new_node)
+                record[new_x][new_y] = True
+
+        print(queue)
+
+    return 'fail'
 
 
 print(search(grid, init, goal, cost))
@@ -103,6 +143,49 @@ def search(grid, init, goal, cost):
     path = None
     expand = []
     # TODO: ADD CODE HERE
+    expand = [[-1 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    closed_list = [[0 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    closed_list[init[0]][init[1]] = 1
+
+    x = init[0]
+    y = init[1]
+    g = 0
+    expand_count = 0
+
+    open_list = [[g, x, y]]
+
+    found = False # flag that is set when search complete
+    resign = False # flag set if we can't find expand
+
+    while found is False and resign is False:
+        if len(open_list) == 0:
+            resign = True
+            path = 'fail'
+            print(path)
+            # Search terminated without success
+        else:
+            # remove node from list
+            open_list.sort()
+            open_list.reverse()
+            next_node = open_list.pop()
+
+            x = next_node[1]
+            y = next_node[2]
+            g = next_node[0]
+            expand[x][y] = expand_count
+            expand_count += 1
+
+            if x == goal[0] and y == goal[1]:
+                found = True
+                path = next_node
+                print(path)
+            else:
+                for i in range(len(delta)):
+                    x2 = x + delta[i][0]
+                    y2 = y + delta[i][1]
+                    if 0 <= x2 < len(grid) and 0 <= y2 < len(grid[0]) and closed_list[x2][y2] == 0 and grid[x2][y2] != 1:
+                        open_list.append([g + cost, x2, y2])
+                        closed_list[x2][y2] = 1
 
     return path, expand
 
@@ -163,6 +246,51 @@ def search(grid, init, goal, cost):
     path = None
     expand = []
     policy = []
+
+    expand = [[-1 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    closed_list = [[0 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    closed_list[init[0]][init[1]] = 1
+
+    x = init[0]
+    y = init[1]
+    g = 0
+    expand_count = 0
+
+    open_list = [[g, x, y]]
+
+    found = False  # flag that is set when search complete
+    resign = False  # flag set if we can't find expand
+
+    while found is False and resign is False:
+        if len(open_list) == 0:
+            resign = True
+            path = 'fail'
+            print(path)
+            # Search terminated without success
+        else:
+            # remove node from list
+            open_list.sort()
+            open_list.reverse()
+            next_node = open_list.pop()
+
+            x = next_node[1]
+            y = next_node[2]
+            g = next_node[0]
+            expand[x][y] = expand_count
+            expand_count += 1
+
+            if x == goal[0] and y == goal[1]:
+                found = True
+                path = next_node
+                print(path)
+            else:
+                for i in range(len(delta)):
+                    x2 = x + delta[i][0]
+                    y2 = y + delta[i][1]
+                    if 0 <= x2 < len(grid) and 0 <= y2 < len(grid[0]) and closed_list[x2][y2] == 0 and grid[x2][
+                        y2] != 1:
+                        open_list.append([g + cost, x2, y2])
+                        closed_list[x2][y2] = 1
 
     return path, expand, policy
 
