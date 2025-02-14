@@ -8,6 +8,7 @@
 # the course.
 #
 ######################################################################
+import random
 
 from Utilities.robot_pf import *
 
@@ -145,16 +146,26 @@ w = []
 '''
   Here is some note:
   1. calculate the current measurement and the sense() Z
-  2. generate 1000 samples(resample) that gives the probability that would close to Z
-  3. maintaining the high probability particles, and letting the low probability particles die.
+  2. generate 1000 samples(sampling) that gives the probability that would close to Z
+  3. maintaining the high probability particles, and letting the low probability particles die. (use resampling method)
+
 '''
-probability_sum = 0.0
+normalized_weight = 0.0
 for i in range(N):
     w.append(p15_2[i].measurement_prob(Z))
-    probability_sum += w[i]
+    normalized_weight += w[i]
 
-print(w)
-print(probability_sum) # the sum here is not equals to 1
+#print(w)
+#print(normalized_weight) # the sum here is not equals to 1
+
+alphas = []
+sum_alphas = 0
+for i in range(N):
+    alphas.append(w[i] / normalized_weight)
+    sum_alphas += alphas[i]
+
+#print(alphas)
+#print(sum_alphas)
 
 
 # --------------------------------------------------------------------
@@ -168,6 +179,19 @@ print("\n20. NEW PARTICLE")
 p3 = []
 # TODO: ADD CODE HERE
 p = p3
+
+p20_1 =[]
+index = int(random.random() * N)
+beta = 0
+mw = max(w)
+for i in range(N):
+    beta += random.random() * 2 * mw
+    while w[index] < beta:
+        beta = beta - w[index]
+        index = (index + 1) % N
+    p20_1.append(p15_2[index])
+
+#print(p20_1)
 
 # --------------------------------------------------------------------
 # 21. RESAMPLING WHEEL
@@ -203,13 +227,45 @@ print("\n23. ORIENTATION 2")
 # run your previous code twice.
 
 N = 1000
-myrobot = robot()
-p = []
+T = 3
+myrobot23 = robot()
+p23 = []
+for i in range(N):
+    x = robot()
+    x.set_noise(0.05, 0.05, 5.0)
+    p23.append(x)
+
+for j in range(T):  # do it twice
+    myrobot23 = myrobot23.move(0.1, 5.0)
+    Z = myrobot23.sense()
+
+    p23_1 = []
+    for k in range(N):
+        p23_1.append(p23[i].move(0.1, 5.0))
+    p23 = p23_1
+
+
+    p23_1_w = []
+    for l in range(N):
+        p23_1_w.append(p23[l].measurement_prob(Z))
+
+    p23_2 = []
+    p23_index = int(random.random() * N)
+    beta = 0
+    mw = max(p23_1_w)
+    for m in range(N):
+        beta += random.random() * 2 * mw
+        while p23_1_w[p23_index] < beta:
+            beta = beta - p23_1_w[p23_index]
+            p23_index = (p23_index + 1) % N
+        p23_2.append(p23[p23_index])
+    p23 = p23_2
+
 
 # Copy and paste your code from the previous exercise (#21)
 # TODO: CHANGE/UPDATE CODE HERE
 
-print(p)
+# print(p23)
 
 # --------------------------------------------------------------------
 # 24. ERROR
@@ -220,8 +276,39 @@ print("\n24. ERROR")
 
 T = 10
 N = 1000
-myrobot = robot()
-p = []
+myrobot24 = robot()
+p24 = []
 
 # Copy and paste your code from the previous exercise (#23)
 # TODO: CHANGE/UPDATE CODE HERE
+for i in range(N):
+    x = robot()
+    x.set_noise(0.05, 0.05, 5.0)
+    p24.append(x)
+
+for j in range(T):  # do it twice
+    myrobot24 = myrobot24.move(0.1, 5.0)
+    Z_24 = myrobot24.sense()
+
+    p24_1 = []
+    for k in range(N):
+        p24_1.append(p24[i].move(0.1, 5.0))
+    p24 = p24_1
+
+    p24_1_w = []
+    for l in range(N):
+        p24_1_w.append(p24[l].measurement_prob(Z_24))
+
+    p24_2 = []
+    p24_index = int(random.random() * N)
+    beta = 0
+    mw_24 = max(p24_1_w)
+    for m in range(N):
+        beta += random.random() * 2.0 * mw_24
+        while p24_1_w[p24_index] < beta:
+            beta = beta - p24_1_w[p24_index]
+            p24_index = (p24_index + 1) % N
+        p24_2.append(p24[p24_index])
+    p24 = p24_2
+
+    print(eval(myrobot24, p24))
