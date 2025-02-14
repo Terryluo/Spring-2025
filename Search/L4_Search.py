@@ -250,6 +250,7 @@ def search(grid, init, goal, cost):
     expand = [[-1 for _ in range(len(grid[0]))] for _ in range(len(grid))]
     closed_list = [[0 for _ in range(len(grid[0]))] for _ in range(len(grid))]
     closed_list[init[0]][init[1]] = 1
+    action = [[-1 for _ in range(len(grid[0]))] for _ in range(len(grid))]
 
     x = init[0]
     y = init[1]
@@ -287,10 +288,22 @@ def search(grid, init, goal, cost):
                 for i in range(len(delta)):
                     x2 = x + delta[i][0]
                     y2 = y + delta[i][1]
-                    if 0 <= x2 < len(grid) and 0 <= y2 < len(grid[0]) and closed_list[x2][y2] == 0 and grid[x2][
-                        y2] != 1:
-                        open_list.append([g + cost, x2, y2])
-                        closed_list[x2][y2] = 1
+                    if 0 <= x2 < len(grid) and 0 <= y2 < len(grid[0]):
+                        if closed_list[x2][y2] == 0 and grid[x2][y2] != 1:
+                            open_list.append([g + cost, x2, y2])
+                            closed_list[x2][y2] = 1
+                            action[x2][y2] = i
+
+    policy = [[' ' for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    x = goal[0]
+    y = goal[1]
+    policy[x][y] = '*'
+    while x != init[0] or y != init[1]: # this should be "or" condition
+        x2 = x - delta[action[x][y]][0]
+        y2 = y - delta[action[x][y]][1]
+        policy[x2][y2] = delta_name[action[x][y]]
+        x = x2
+        y = y2
 
     return path, expand, policy
 
@@ -343,6 +356,69 @@ def search(grid, init, goal, cost, heuristic):
     expand = []
     policy = []
 
+    expand = [[-1 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    closed_list = [[0 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    closed_list[init[0]][init[1]] = 1
+    action = [[-1 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+
+    x = init[0]
+    y = init[1]
+    g = 0
+    h = heuristic[x][y]
+    f = g + h
+
+    open_list = [[f, g, h, x, y]]
+
+    found = False  # flag that is set when search complete
+    resign = False  # flag set if we can't find expand
+    expand_count = 0
+
+    while found is False and resign is False:
+        if len(open_list) == 0:
+            resign = True
+            path = 'fail'
+            print(path)
+            # Search terminated without success
+        else:
+            # remove node from list
+            open_list.sort()
+            open_list.reverse()
+            next_node = open_list.pop()
+
+            x = next_node[3]
+            y = next_node[4]
+            g = next_node[1]
+            expand[x][y] = expand_count
+            expand_count += 1
+
+            if x == goal[0] and y == goal[1]:
+                found = True
+                path = next_node
+                print(path)
+            else:
+                for i in range(len(delta)):
+                    x2 = x + delta[i][0]
+                    y2 = y + delta[i][1]
+                    if 0 <= x2 < len(grid) and 0 <= y2 < len(grid[0]):
+                        if closed_list[x2][y2] == 0 and grid[x2][y2] != 1:
+                            h2 = heuristic[x2][y2]
+                            g2 = g + cost
+                            f2 = g2 + h2
+                            open_list.append([f2, g2, h2, x2, y2])
+                            closed_list[x2][y2] = 1
+                            action[x2][y2] = i
+
+    policy = [[' ' for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    x = goal[0]
+    y = goal[1]
+    policy[x][y] = '*'
+    while x != init[0] or y != init[1]:  # this should be "or" condition
+        x2 = x - delta[action[x][y]][0]
+        y2 = y - delta[action[x][y]][1]
+        policy[x2][y2] = delta_name[action[x][y]]
+        x = x2
+        y = y2
+
     return path, expand, policy
 
 
@@ -367,9 +443,18 @@ grid = [[0, 0, 1, 0, 0, 0],
         [0, 0, 1, 1, 1, 0],
         [0, 0, 0, 0, 1, 0]]
 
+grid_old2 = [[0, 0, 1, 0, 0, 0, 0],
+        [1, 0, 1, 0, 1, 1, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 0, 1],
+        [0, 0, 1, 0, 1, 0, 0]]
+
 init = [0, 0]
+init_old1 = [len(grid)-1, len(grid[0])-1]
+init_old2 = [4, 0]
 goal = [len(grid)-1, len(grid[0])-1]
 cost = 1
+goal_old = [2, 1]
 
 delta = [[-1, 0],  # go up
          [0, -1],  # go left
@@ -384,6 +469,29 @@ def compute_value(grid, goal, cost):
     # TODO: ADD CODE HERE
     # make sure your function returns a grid of values as
     # demonstrated in the previous video.
+    value = [[99 for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    v = 0
+    x = goal[0]
+    y = goal[1]
+    open_list = [[v, x, y]]
+    while x != init[0] or y != init[1]:
+        open_list.sort()
+        open_list.reverse()
+
+        next_node = open_list.pop()
+        x = next_node[1]
+        y = next_node[2]
+        v = next_node[0]
+        if value[x][y] == 99:
+            value[x][y] = v
+        for i in range(len(delta)):
+            x2 = x + delta[i][0]
+            y2 = y + delta[i][1]
+            if 0 <= x2 < len(grid) and 0 <= y2 < len(grid[0]):
+                if value[x2][y2] == 99 and grid[x2][y2] != 1:
+                    v2 = v + cost
+                    open_list.append([v2, x2, y2])
+
     return value
 
 
